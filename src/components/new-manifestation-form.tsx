@@ -1,0 +1,18 @@
+"use client";
+import {useState} from "react";import {useRouter} from "next/navigation";
+type Option={id:string;name:string};
+export function NewManifestationForm({channels,locations,categories,responsibles}:{channels:Option[];locations:Option[];categories:Option[];responsibles:Option[]}){const router=useRouter();const[saving,setSaving]=useState(false);const[error,setError]=useState("");
+async function submit(formData:FormData){setSaving(true);setError("");const payload=Object.fromEntries(formData.entries());try{const res=await fetch("/api/manifestacoes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=await res.json();if(!res.ok)throw new Error(data.error||"Não foi possível salvar.");router.push("/manifestacoes");router.refresh()}catch(e){setError(e instanceof Error?e.message:"Falha ao salvar.")}finally{setSaving(false)}}
+return <form action={submit}><div className="form-grid">
+<div className="field"><label htmlFor="date">Data da manifestação *</label><input id="date" name="date" type="date" required defaultValue={new Date().toISOString().slice(0,10)}/></div>
+<div className="field"><label htmlFor="channelId">Canal</label><select id="channelId" name="channelId" defaultValue=""><option value="">Selecione</option>{channels.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+<div className="field"><label htmlFor="locationId">Local / setor</label><select id="locationId" name="locationId" defaultValue=""><option value="">Selecione</option>{locations.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+<div className="field"><label htmlFor="categoryId">Categoria</label><select id="categoryId" name="categoryId" defaultValue=""><option value="">Selecione</option>{categories.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+<div className="field"><label htmlFor="responsibleId">Responsável</label><select id="responsibleId" name="responsibleId" defaultValue=""><option value="">Selecione</option>{responsibles.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+<div className="field"><label htmlFor="deadline">Prazo</label><input id="deadline" name="deadline" type="date"/></div>
+<div className="field"><label htmlFor="status">Status *</label><select id="status" name="status" defaultValue="PENDENTE" required><option value="PENDENTE">Pendente</option><option value="EM_ANALISE">Em análise</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDO">Concluído</option><option value="INDEFERIDO">Indeferido</option></select></div>
+<div className="field"><label htmlFor="disclosure">Divulgação autorizada?</label><select id="disclosure" name="disclosure" defaultValue="false"><option value="false">Não</option><option value="true">Sim</option></select></div>
+<div className="field span-2"><label htmlFor="issue">Manifestação / relato *</label><textarea id="issue" name="issue" required minLength={3} maxLength={10000} placeholder="Descreva o relato recebido."/></div>
+<div className="field span-2"><label htmlFor="action">Ação / tratativa</label><textarea id="action" name="action" maxLength={10000} placeholder="Registre a providência adotada ou planejada."/></div>
+<div className="field span-2"><label htmlFor="notes">Observações internas</label><textarea id="notes" name="notes" maxLength={5000} placeholder="Informações complementares (opcional)."/></div>
+</div>{error&&<div className="notice">{error}</div>}<div className="form-actions"><button className="btn secondary" type="button" onClick={()=>router.back()}>Cancelar</button><button className="btn" disabled={saving}>{saving?"Salvando…":"Salvar manifestação"}</button></div></form>}

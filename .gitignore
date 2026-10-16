@@ -1,0 +1,5 @@
+node_modules/\n.next/\nout/\nbuild/\n.env\n.env.local\n.env.*.local\n.vercel/\ncoverage/\n*.log\n
+node_modules/
+.next/
+.env
+.env.local

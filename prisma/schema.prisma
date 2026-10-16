@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ManifestationStatus {
+  PENDENTE
+  EM_ANALISE
+  EM_ANDAMENTO
+  CONCLUIDO
+  INDEFERIDO
+}
+
+enum FeedbackStatus {
+  NOVO
+  LIDO
+  ENCAMINHADO
+  CONCLUIDO
+}
+
+model User {
+  id               String                 @id @default(cuid())
+  name             String
+  email            String                 @unique
+  role             String                 @default("QUALITY")
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  createdRecords   Manifestation[]        @relation("ManifestationCreatedBy")
+  updatedRecords   Manifestation[]        @relation("ManifestationUpdatedBy")
+  createdFeedbacks Feedback[]             @relation("FeedbackCreatedBy")
+  history          ManifestationHistory[]
+}
+
+model Channel {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  active         Boolean         @default(true)
+  manifestations Manifestation[]
+  feedbacks      Feedback[]
+  createdAt      DateTime        @default(now())
+}
+
+model Location {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  active         Boolean         @default(true)
+  manifestations Manifestation[]
+  createdAt      DateTime        @default(now())
+}
+
+model Category {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  active         Boolean         @default(true)
+  manifestations Manifestation[]
+  createdAt      DateTime        @default(now())
+}
+
+model Responsible {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  active         Boolean         @default(true)
+  manifestations Manifestation[]
+  createdAt      DateTime        @default(now())
+}
+
+model Manifestation {
+  id              String                 @id @default(cuid())
+  date            DateTime
+  channelId       String?
+  locationId      String?
+  categoryId      String?
+  responsibleId   String?
+  title           String                 @default("ManifestaÃ§Ã£o")
+  issue           String                 @db.Text
+  action          String?                @db.Text
+  deadline        DateTime?
+  status          ManifestationStatus    @default(PENDENTE)
+  disclosure      Boolean                @default(false)
+  sourceReference String?
+  notes           String?                @db.Text
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  createdById     String?
+  updatedById     String?
+  channel         Channel?               @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  location        Location?              @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  category        Category?              @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  responsible     Responsible?           @relation(fields: [responsibleId], references: [id], onDelete: SetNull)
+  createdBy       User?                  @relation("ManifestationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy       User?                  @relation("ManifestationUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  history         ManifestationHistory[]
+
+  @@index([date])
+  @@index([status])
+  @@index([locationId])
+  @@index([responsibleId])
+}
+
+model ManifestationHistory {
+  id              String        @id @default(cuid())
+  manifestationId String
+  userId          String?
+  action          String
+  details         String?       @db.Text
+  createdAt       DateTime      @default(now())
+  manifestation   Manifestation @relation(fields: [manifestationId], references: [id], onDelete: Cascade)
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([manifestationId, createdAt])
+}
+
+model Feedback {
+  id          String         @id @default(cuid())
+  date        DateTime
+  channelId   String?
+  sector      String?
+  className   String?
+  message     String         @db.Text
+  status      FeedbackStatus @default(NOVO)
+  sentiment   String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdById String?
+  channel     Channel?       @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  createdBy   User?          @relation("FeedbackCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([date])
+  @@index([status])
+}
