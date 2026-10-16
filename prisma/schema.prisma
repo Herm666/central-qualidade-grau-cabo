@@ -75,7 +75,7 @@ model Manifestation {
   locationId      String?
   categoryId      String?
   responsibleId   String?
-  title           String                 @default("ManifestaÃ§Ã£o")
+  title           String                 @default("Manifestação")
   issue           String                 @db.Text
   action          String?                @db.Text
   deadline        DateTime?
